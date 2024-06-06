@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Account</h2>
+        <p id="balance">Balance: ${{ balance }}</p>
+        <form id="depositForm">
+            <input type="number" id="depositAmount" name="amount" placeholder="Deposit Amount" required>
+            <button type="submit">Deposit</button>
+        </form>
+        <form id="transferForm">
+            <input type="text" id="transferUsername" name="target_username" placeholder="Transfer to (username)" required>
+            <input type="number" id="transferAmount" name="amount" placeholder="Transfer Amount" required>
+            <button type="submit">Transfer</button>
+        </form>
+        <div id="message"></div>
+        <button id="logoutButton">Logout</button>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
