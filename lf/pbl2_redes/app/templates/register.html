@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" id="registerUsername" name="username" placeholder="Username" required>
+            <input type="password" id="registerPassword" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <div id="message"></div>
+        <button id="loginButton">Login</button>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
