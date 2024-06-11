@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logoutButton');
     const message = document.getElementById('message');
     const balanceText = document.getElementById('balance');
+    const abBalanceText1 = document.getElementById('abBalance1');
+    const abNameText1 = document.getElementById('abName1');
 
     const showMessage = (msg) => {
         message.textContent = msg;
@@ -19,6 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.balance !== undefined) {
                     balanceText.textContent = `Balance: $${data.balance}`;
+                }
+            });
+    };
+
+    const updateAbBalance = () => {
+        fetch('/ab_balance')
+            .then(response => response.json())
+            .then(data => {
+                if (data.balance !== undefined) {
+                    abBalanceText1.textContent = `Balance: $${data.balance}`;
+                    abNameText1.textContent = `${data.bank}`;
                 }
             });
     };
@@ -94,15 +107,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (withdrawForm) {
+        withdrawForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            fetch('/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.message);
+                updateBalance();
+            });
+        });
+    }
+    
+
     if (transferForm) {
         transferForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const targetUsername = document.getElementById('transferUsername').value;
             const amount = parseFloat(document.getElementById('transferAmount').value);
+            const targetBank = document.getElementById('transferBank').value;
             fetch('/transfer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ target_username: targetUsername, amount })
+                body: JSON.stringify({ target_username: targetUsername, amount, target_bank: targetBank })
             })
             .then(response => response.json())
             .then(data => {
@@ -127,5 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (balanceText) {
         updateBalance();
+        updateAbBalance();
     }
 });
