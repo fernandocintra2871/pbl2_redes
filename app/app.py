@@ -11,8 +11,8 @@ accounts = {}
 
 
 host = "127.0.0.1"
-port = input("Porta: ")
-bank_name = input("Nome do Banco: ")
+port = "12345"#input("Porta: ")
+bank_name = "Brasil"#input("Nome do Banco: ")
 
 host_a1 = "127.0.0.1"
 port_a1 = "12346"
@@ -20,10 +20,14 @@ port_a1 = "12346"
 host_a2 = "127.0.0.1"
 port_a2 = "12347"
 
+allowed_ips = ['127.0.0.1']
 
 # Conta de teste
 users["1"] = { 'id': "1",'password': "123" }
 accounts["1"] = { 'balance': 999, 'used': False}
+
+users["2"] = { 'id': "2",'password': "123" }
+accounts["2"] = { 'balance': 0, 'used': False}
 
 
 @app.route('/')
@@ -119,38 +123,53 @@ def transfer():
         return jsonify({'message': 'Unauthorized'}), 401
     
     data = request.get_json()
-    target_username = data.get('target_username')
-    amount = data.get('amount')
-    
-    if amount <= 0:
+    print(data)
+    transfers = data.get('transfers')
+
+    print(transfers)
+    account_transfer = transfers.pop(0)
+    target_username = account_transfer.get('target_username')
+    account_amount = account_transfer.get('amount')
+
+    total_amount = 0
+
+    if account_amount == None:
+        account_amount = 0
+
+    if account_amount < 0:
         return jsonify({'message': 'Invalid amount'}), 400
     
+    user_id = session['user_id']
+    if accounts[user_id]['balance'] < account_amount:
+        return jsonify({'message': 'Insufficient funds'}), 400
+    
+    total_amount += account_amount #temp
+
+    user_id = session.get('user_id')
+    balances = consult_balances(user_id)
+    print(balances)
+    i = 0
+    while i < len(transfers):
+        amount = transfers[i]['amount']
+        if amount < 0:
+            return jsonify({'message': 'Invalid amount'}), 400
+        if balances[i]['balance'] < amount:
+            return jsonify({'message': 'Insufficient funds'}), 400
+        
+        print("retirando", amount) #temp
+
+        total_amount += amount #temp
+        i += 1
+
     target_user = users.get(target_username)
     if not target_user:
         return jsonify({'message': 'Target user does not exist'}), 404
     
-    user_id = session['user_id']
-    if accounts[user_id]['balance'] < amount:
-        return jsonify({'message': 'Insufficient funds'}), 400
-    
     target_user_id = target_user['id']
 
-    """
-    c = 0
-    while accounts[user_id]['used'] and accounts[target_user_id]['used']:
-        if c > 1000000000:
-            return jsonify({'message': 'Target user does not exist'}), 423
-        c += 1
-   
-    accounts[user_id]['used'] = True
-    accounts[target_user_id]['used'] = True
-    """
-
-    accounts[user_id]['balance'] -= amount
-    accounts[target_user_id]['balance'] += amount
+    # accounts[user_id]['balance'] -= amount
+    accounts[target_user_id]['balance'] += total_amount # temp
     
-    #accounts[user_id]['used'] = False
-    #accounts[target_user_id]['used'] = False
     
     print(accounts)
     return jsonify({'message': 'Transfer successful', 'new_balance': accounts[user_id]['balance']}), 200
@@ -179,21 +198,39 @@ def ab_balances():
         return jsonify({'message': 'Unauthorized'}), 401
     
     user_id = session['user_id']
-    response = requests.post(f'http://{host_a1}:{port_a1}/balance', json={'user_id': user_id})
+    balances = consult_balances(user_id)
+    return  jsonify(balances), 200
+
+def consult_balances(user_id):
+    balances = []
+    #response = requests.post(f'http://{host}:{port}/balance', json={'user_id': user_id})
+    #data = response.json()
+    #balances.append(data)
+    response = requests.post(f'http://{host}:{port}/balance', json={'user_id': user_id})
     data = response.json()
-    return  jsonify(data), 200
+    balances.append(data)
+    response = requests.post(f'http://{host}:{port}/balance', json={'user_id': user_id})
+    data = response.json()
+    balances.append(data)
+    return balances
 
 @app.route('/balance', methods=['POST'])
 def balance():
-     # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
-    allowed_ips = ['127.0.0.1'] 
+    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
     client_ip = request.remote_addr
     if client_ip not in allowed_ips:
         return jsonify({'message': 'Forbidden'}), 403
+    
     data = request.get_json()
     user_id = data.get('user_id')
     print(data)
     print(user_id)
+    
+    # Verifica se a conta existe
+    if user_id not in accounts:
+        return jsonify({'message': 'User account does not exist'}), 404
+    
+    # Retorna o saldo da conta se a conta existir
     return jsonify({'bank': bank_name, 'balance': accounts[user_id]['balance']}), 200
 
 if __name__ == '__main__':

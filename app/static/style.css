@@ -59,3 +59,28 @@ p {
     font-size: 18px;
     color: #333;
 }
+
+/* Adicione ou ajuste no seu arquivo de estilo CSS */
+
+.balance-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0px;
+}
+
+.balance-item {
+    margin-top: 0px;
+    padding: 10px;
+    border: none;
+    margin: 0 10px;
+    max-width: 200px;
+    text-align: left; /* Alinha o texto à esquerda dentro de cada balance-item */
+}
+
+.balance-item + .balance-item {
+    margin-left: 20px; /* Espaçamento entre os balance-items */
+}
+
+#other_accounts {
+    margin-bottom: 0;
+}

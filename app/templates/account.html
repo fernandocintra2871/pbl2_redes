@@ -7,27 +7,32 @@
 </head>
 <body>
     <div class="container">
-        <h2>{{ bank_name }}</h2>
-        <p id="balance">Balance: ${{ balance }}</p>
-        <h2>Affiliated Banks</h2>
-        <h3 id="abName1">{{ abName1 }}</h3>
-        <p id="abBalance1">Balance: ${{ abBalance1 }}</p>
-        <form id="depositForm">
-            <input type="number" id="depositAmount" name="amount" placeholder="Deposit Amount" required>
-            <button type="submit">Deposit</button>
-        </form>
-        <form id="withdrawForm">
-            <input type="number" id="withdrawAmount" name="amount" placeholder="Withdraw Amount" required>
-            <button type="submit">Withdraw</button>
-        </form>
+        <div>
+            <h2>{{ bank_name }}</h2>
+            <p id="balance">Balance: ${{ balance }}</p>
+            <h2 id="other_accounts">Outras Contas</h2>
+            <div id="affiliatedBanksContainer" class="balance-container"></div> <!-- Contêiner para os saldos dos bancos afiliados -->
+            <form id="depositForm">
+                <input type="number" id="depositAmount" name="amount" placeholder="Deposit Amount" required>
+                <button type="submit">Deposit</button>
+            </form>
+            <form id="withdrawForm">
+                <input type="number" id="withdrawAmount" name="amount" placeholder="Withdraw Amount" required>
+                <button type="submit">Withdraw</button>
+            </form>
+        </div>
         <form id="transferForm">
             <input type="text" id="transferUsername" name="target_username" placeholder="Transfer to (username)" required>
-            <input type="number" id="transferAmount" name="amount" placeholder="Transfer Amount" required>
+            <input type="number" id="transferAmount" name="amount" placeholder="Transfer Amount">
+            <label for="multipleTransfers">Multiple Transfers</label>
+            <input type="checkbox" id="multipleTransfers" name="multiple_transfers">
+            <div id="extraTransfers" style="display: none;">
+            </div>
             <button type="submit">Transfer</button>
         </form>
         <div id="message"></div>
         <button id="logoutButton">Logout</button>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='account_script.js') }}"></script>
 </body>
 </html>
