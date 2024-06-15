@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const balanceText = document.getElementById('balance');
     const affiliatedBanksContainer = document.getElementById('affiliatedBanksContainer');
     const multipleTransfersCheckbox = document.getElementById('multipleTransfers');
+    const otherAccountsCheckbox = document.getElementById('otherAccounts');
     const extraTransfers = document.getElementById('extraTransfers');
 
     const showMessage = (msg) => {
@@ -166,6 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 extraTransfers.style.display = 'block';
             } else {
                 extraTransfers.style.display = 'none';
+            }
+        });
+    }
+
+    if (otherAccountsCheckbox) {
+        otherAccountsCheckbox.addEventListener('change', () => {
+            if (otherAccountsCheckbox.checked) {
+                affiliatedBanksContainer.style.display = 'flex';
+            } else {
+                affiliatedBanksContainer.style.display = 'none';
             }
         });
     }

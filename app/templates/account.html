@@ -11,7 +11,9 @@
             <h2>{{ bank_name }}</h2>
             <p id="balance">Balance: ${{ balance }}</p>
             <h2 id="other_accounts">Outras Contas</h2>
-            <div id="affiliatedBanksContainer" class="balance-container"></div> <!-- Contêiner para os saldos dos bancos afiliados -->
+            <label for="otherAccounts">Mostrar Outras Contas</label>
+            <input type="checkbox" id="otherAccounts" name="other_accounts">
+            <div id="affiliatedBanksContainer" class="balance-container" style="display: none;"></div> <!-- Contêiner para os saldos dos bancos afiliados -->
             <form id="depositForm">
                 <input type="number" id="depositAmount" name="amount" placeholder="Deposit Amount" required>
                 <button type="submit">Deposit</button>

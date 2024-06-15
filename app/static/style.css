@@ -5,8 +5,13 @@ body {
     padding: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start; /* Alinha os itens no topo */
+    min-height: 100vh; /* Garante que o body ocupe pelo menos a altura da viewport */
+    overflow-y: auto; /* Permite a rolagem vertical */
+}
+
+html {
+    overflow-y: auto; /* Garante que a rolagem funcione no HTML */
 }
 
 .container {
@@ -15,7 +20,11 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     border-radius: 8px;
     text-align: center;
+    max-width: 600px; /* Ajuste conforme necessário */
     width: 300px;
+    margin: 20px auto; /* Adiciona espaçamento em torno do contêiner e centraliza */
+    display: flex;
+    flex-direction: column; /* Permite que o contêiner cresça verticalmente */
 }
 
 h2 {
@@ -60,10 +69,7 @@ p {
     color: #333;
 }
 
-/* Adicione ou ajuste no seu arquivo de estilo CSS */
-
 .balance-container {
-    display: flex;
     justify-content: center;
     margin-top: 0px;
 }
@@ -83,4 +89,12 @@ p {
 
 #other_accounts {
     margin-bottom: 0;
+}
+
+#affiliatedBanksContainer {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem para uma nova linha se necessário */
+    justify-content: center; /* Centraliza os itens horizontalmente */
+    align-items: center; /* Centraliza os itens verticalmente */
+    gap: 10px; /* Espaçamento entre os itens */
 }

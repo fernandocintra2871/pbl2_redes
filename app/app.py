@@ -26,6 +26,9 @@ allowed_ips = ['127.0.0.1']
 users["1"] = { 'id': "1",'password': "123" }
 accounts["1"] = { 'balance': 999, 'used': False}
 
+users["1&2"] = { 'id': "1&2",'password': "123" }
+accounts["1&2"] = { 'balance': 777, 'used': False}
+
 users["2"] = { 'id': "2",'password': "123" }
 accounts["2"] = { 'balance': 0, 'used': False}
 
@@ -208,10 +211,10 @@ def consult_balances(user_id):
     #balances.append(data)
     response = requests.post(f'http://{host}:{port}/balance', json={'user_id': user_id})
     data = response.json()
-    balances.append(data)
+    balances += data
     response = requests.post(f'http://{host}:{port}/balance', json={'user_id': user_id})
     data = response.json()
-    balances.append(data)
+    balances += data
     return balances
 
 @app.route('/balance', methods=['POST'])
@@ -226,12 +229,57 @@ def balance():
     print(data)
     print(user_id)
     
+    accounts_found = []
+    for account_id in accounts.keys():
+        if user_id == account_id or user_id in account_id.split("&"):
+            accounts_found.append({'bank': bank_name, 'balance': accounts[account_id]['balance']})
+
+    # Verifica se a conta existe
+    if len(accounts_found) == 0:
+        return jsonify({'message': 'User account does not exist'}), 404
+    
+    # Retorna o saldo da conta se a conta existir
+    return jsonify(accounts_found), 200
+
+
+
+@app.route('/add_balance', methods=['POST'])
+def add_balance():
+    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
+    client_ip = request.remote_addr
+    if client_ip not in allowed_ips:
+        return jsonify({'message': 'Forbidden'}), 403
+    
+    data = request.get_json()
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+    
     # Verifica se a conta existe
     if user_id not in accounts:
         return jsonify({'message': 'User account does not exist'}), 404
     
-    # Retorna o saldo da conta se a conta existir
-    return jsonify({'bank': bank_name, 'balance': accounts[user_id]['balance']}), 200
+    # Adiciona o valor na conta
+    accounts[user_id]['balance'] += amount
+    return jsonify({'message': 'Amount added to account'}), 200
+
+@app.route('/remove_balance', methods=['POST'])
+def remove_balance():
+    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
+    client_ip = request.remote_addr
+    if client_ip not in allowed_ips:
+        return jsonify({'message': 'Forbidden'}), 403
+    
+    data = request.get_json()
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+    
+    # Verifica se a conta existe
+    if user_id not in accounts:
+        return jsonify({'message': 'User account does not exist'}), 404
+    
+    # Adiciona o valor na conta
+    accounts[user_id]['balance'] -= amount
+    return jsonify({'message': 'Amount removed to account'}), 200
 
 if __name__ == '__main__':
     app.run(host=host, port=port)
