@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transferência</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Transferência</h2>
+        <form id="transferForm">
+            <select id="bankSelection" name="bank" required>
+                <option value="">Selecione um banco</option>
+                <option value="brasil">Banco do Brasil</option>
+                <option value="bradesco">Bradesco</option>
+                <option value="caixa">Caixa Econômica Federal</option>
+            </select>
+            <div>
+                <label for="transferJointAccount">Conta Conjunta</label>
+                <input type="checkbox" id="transferJointAccount" name="joint_account">
+            </div>
+            <input type="text" id="transferTarget1" name="target1" placeholder="CPF do Beneficiário" required>
+            <input type="text" id="transferTarget2" style="display: none;" name="target2" placeholder="CPF do Segundo Titular do Beneficiário">
+            <h3>Valores</h3>
+            <div id="transferAmounts"></div>
+            <button type="submit">Transferir</button>
+        </form>
+        <div id="message"></div>
+        <button id="goBack">Voltar</button>
+    </div>
+    <script src="{{ url_for('static', filename='transfer.js') }}"></script>

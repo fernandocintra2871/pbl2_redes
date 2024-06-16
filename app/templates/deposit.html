@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Depósito</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Depósito</h2>
+        <form id="depositForm">
+            <select id="depositBankSelection" name="bank" required>
+                <option value="">Selecione um banco</option>
+                <option value="brasil">Banco do Brasil</option>
+                <option value="bradesco">Bradesco</option>
+                <option value="caixa">Caixa Econômica Federal</option>
+            </select>
+            <div>
+                <label for="depositJointAccount">Conta Conjunta</label>
+                <input type="checkbox" id="depositJointAccount" name="joint_account">
+            </div>
+           
+            <input type="text" id="depositSecondHolder" style="display: none;"  name="second_holder" placeholder="CPF do Segundo Titular">
+            <input type="number" id="depositAmount" name="amount" placeholder="Valor do Deposito" required>
+            <button type="submit">Depositar</button>
+        </form>
+        <div id="message"></div>
+        <button id="goBack">Voltar</button>
+    </div>
+    <script src="{{ url_for('static', filename='deposit.js') }}"></script>
+</body>
+</html>
