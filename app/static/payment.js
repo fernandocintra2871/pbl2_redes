@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const transferForm = document.getElementById('transferForm');
-    const transferJointAccountCheckbox = document.getElementById('transferJointAccount');
+    const paymentForm = document.getElementById('paymentForm');
     const transferAmounts = document.getElementById('transferAmounts');
     const message = document.getElementById('message');
 
@@ -12,16 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = url;
     };
 
-    if (transferForm) {
-        transferForm.addEventListener('submit', (e) => {
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const bank = document.getElementById('bankSelection').value;
-            const joint_account = document.getElementById('transferJointAccount').checked;
-            const target1 = document.getElementById('transferTarget1').value;
-            const target2 = document.getElementById('transferTarget2').value;
+            const payment_target = document.getElementById('paymentTarget').value;
             
             const transfers = [];
-            let total_amount = 0;
+
             const dynamicTransferInputs = transferAmounts.querySelectorAll('input[type="number"]');
             dynamicTransferInputs.forEach(input => {
                 let parts = input.name.split('|');
@@ -30,15 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const transferAmount = parseFloat(input.value);
                 if (!isNaN(transferAmount)) {
                     transfers.push({ user_id: transferID, bank: transferBank, operation:'subtraction',  amount:  transferAmount });
-                    total_amount += transferAmount;
                 }
             });
 
-            const target = joint_account ? `${target1}&${target2}` : target1;
-            transfers.push({ bank: bank, user_id: target, operation: 'addition', amount: total_amount });
-
             if (transfers.length > 1){
-                fetch('/transfer_op', {
+                fetch('/payment_op', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(transfers)
@@ -51,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 2000); // Redirecionar para a página principal após 2 segundos
                 })
                 .catch(error => {
-                    console.error('Erro ao realizar a transferência:', error);
+                    console.error('Erro ao realizar o pagamento:', error);
                 });
             } else {
                 showMessage('Nenhuma transferência válida encontrada.');
@@ -84,22 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    if (transferJointAccountCheckbox) {
-        transferJointAccountCheckbox.addEventListener('change', () => {
-            if (transferJointAccountCheckbox.checked) {
-                document.getElementById('transferTarget2').style.display = 'block';
-                document.getElementById('transferTarget2').setAttribute('required');
-            } else {
-                document.getElementById('transferTarget2').style.display = 'none';
-                document.getElementById('transferTarget2').removeAttribute('required');
-                document.getElementById('transferTarget2').value = '';
-            }
-        });
-    }
-
     document.getElementById('goBack').addEventListener('click', () => {
         redirectTo('/');
     });
-
 
 });

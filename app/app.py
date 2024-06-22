@@ -1,20 +1,32 @@
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 from time import sleep
 import requests
+import threading
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
 
-# Simulated database
 users = {}
 accounts = {}
 
+pending_undones = []
+
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
 
 host = "127.0.0.1"
-port = "12345"#input("Porta: ")
-bank_name = "brasil"#input("Nome do Banco: ")
+port = "12345"
+bank_name = "brasil"
 
-# Host do Banco do Brasil
+
 host1 = "127.0.0.1"
 port1 = "12345"
 
@@ -30,14 +42,20 @@ allowed_ips = ['127.0.0.1']
 
 # Conta de teste
 users["1"] = { 'id': "1",'password': "123" }
-accounts["1"] = { 'balance': 1000, 'used': False }
+accounts["1"] = { 'balance': 1000, 'lock': threading.Lock() }
 
 users["1&2"] = { 'id': "1&2",'password': "123" }
-accounts["1&2"] = { 'balance': 500, 'used': False }
+accounts["1&2"] = { 'balance': 500, 'lock': threading.Lock() }
 
 users["2"] = { 'id': "2",'password': "123" }
-accounts["2"] = { 'balance': 0, 'used': False}
+accounts["2"] = { 'balance': 0, 'lock': threading.Lock()}
 
+
+"""
+========================================================================
+                    Rotas das Paginas do Sistema
+========================================================================
+"""
 
 @app.route('/')
 def home():
@@ -71,6 +89,30 @@ def deposit():
 def transfer():
     return render_template('transfer.html')
 
+@app.route('/payment')
+def payment():
+    return render_template('payment.html')
+
+@app.route('/account_balance', methods=['GET'])
+def account_balance():
+    if 'user_id' not in session:
+        return jsonify({'message': 'Unauthorized'}), 401
+    
+    user_id = session['user_id']
+    return jsonify({'balance': accounts[user_id]['balance']}), 200
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'message': 'Logout successful'}), 200
+
+
+"""
+========================================================================
+                        Registro e Login
+========================================================================
+"""
+
 @app.route('/register', methods=['POST'])
 def register_user():
     data = request.get_json()
@@ -86,10 +128,10 @@ def register_user():
     }
     accounts[username] = {
         'balance': 0,
-        'used': False
+        'used': False,
+        'lock': threading.Lock()
     }
 
-    print(users, accounts)
     return jsonify({'message': 'User registered successfully'}), 201
 
 @app.route('/login', methods=['POST'])
@@ -103,35 +145,17 @@ def login_user():
         return jsonify({'message': 'Invalid username or password'}), 401
     
     session['user_id'] = user['id']
-    print(session)
     return jsonify({'message': 'Login successful'}), 200
-
-
-@app.route('/account_balance', methods=['GET'])
-def account_balance():
-    if 'user_id' not in session:
-        return jsonify({'message': 'Unauthorized'}), 401
-    
-    user_id = session['user_id']
-    return jsonify({'balance': accounts[user_id]['balance']}), 200
-
-@app.route('/logout', methods=['POST'])
-def logout():
-    session.pop('user_id', None)
-    return jsonify({'message': 'Logout successful'}), 200
 
 """
 ========================================================================
-                    Comunicação entre os bancos
+                        Operações
 ========================================================================
 """
 
 @app.route('/deposit_op', methods=['POST'])
 def deposit_op():
     data = request.get_json()
-
-    print("Deposito")
-    print(data)
 
     if 'user_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
@@ -148,15 +172,7 @@ def deposit_op():
     if joint_account == True:
         user_id += '&' + second_holder
 
-    if bank == 'brasil':
-        target_host = host1
-        target_port = port1
-    elif bank == 'bradesco':
-        target_host = host2
-        target_port = port2
-    elif bank == 'caixa':
-        target_host = host3
-        target_port = port3
+    target_host, target_port = get_host(bank)
 
     try:
         response = requests.post(f'http://{target_host}:{target_port}/add_balance', json={'user_id': user_id, 'amount': amount})
@@ -172,9 +188,6 @@ def deposit_op():
 def withdraw_op():
     data = request.get_json()
 
-    print("Saque")
-    print(data)
-
     if 'user_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
     
@@ -190,15 +203,7 @@ def withdraw_op():
     if joint_account == True:
         user_id += '&' + second_holder
 
-    if bank == 'brasil':
-        target_host = host1
-        target_port = port1
-    elif bank == 'bradesco':
-        target_host = host2
-        target_port = port2
-    elif bank == 'caixa':
-        target_host = host3
-        target_port = port3
+    target_host, target_port = get_host(bank)
     
     try:
         response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json={'user_id': user_id, 'amount': amount})
@@ -210,78 +215,13 @@ def withdraw_op():
   
     return jsonify(data), code
 
-@app.route('/transfer_op', methods=['POST'])
-def transfer_op():
-    data = request.get_json()
-
-    print("Trasnferencia")
-    print(data)
-
-    if 'user_id' not in session:
-        return jsonify({'message': 'Unauthorized'}), 401
-    
-    target_bank = data['bank']
-    joint_account = data['joint_account']
-    if joint_account:
-        target = data['target1'] + '&' + data['target2']
-    else:
-        target = data['target1']
-    transfers = data['transfers']
-
-    total_amount = 0
-    for transfer in transfers:
-        bank = transfer['bank']
-        user_id = transfer['user_id']
-        amount = transfer['amount']
-
-        if bank == 'brasil':
-            target_host = host1
-            target_port = port1
-        elif bank == 'bradesco':
-            target_host = host2
-            target_port = port2
-        elif bank == 'caixa':
-            target_host = host3
-            target_port = port3
-        
-        try:
-            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json={'user_id': user_id, 'amount': amount})
-        except requests.exceptions.ConnectionError:
-            print('Deu b.o')
-
-        total_amount += amount
-
-    if target_bank == 'brasil':
-        target_host = host1
-        target_port = port1
-    elif target_bank == 'bradesco':
-        target_host = host2
-        target_port = port2
-    elif target_bank == 'caixa':
-        target_host = host3
-        target_port = port3
-
-    try:
-        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json={'user_id': target, 'amount': total_amount})
-    except requests.exceptions.ConnectionError:
-        return jsonify({'message': 'Falha ao se comunicar com o banco destino'}), 502
-
-    print(response.json())
-    return jsonify({'message': 'Trasnferencia realizada com sucesso!'}), 200
-
-# affiliates banks balances
 @app.route('/ab_balance', methods=['GET'])
 def ab_balances():
     if 'user_id' not in session:
         return jsonify({'message': 'Unauthorized'}), 401
     
     user_id = session['user_id']
-    balances = consult_balances(user_id)
-    #print("balances")
-    #print(balances)
-    return  jsonify(balances), 200
 
-def consult_balances(user_id):
     balances = []
     response = requests.get(f'http://{host}:{port}/balances/{user_id}')
     data = response.json()
@@ -292,11 +232,131 @@ def consult_balances(user_id):
     response = requests.get(f'http://{host}:{port}/balances/{user_id}')
     data = response.json()
     balances += data
-    return balances
+
+    return  jsonify(balances), 200
+
+@app.route('/payment_op', methods=['POST'])
+def payment_op():
+    if 'user_id' not in session:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    transfers = request.get_json()
+
+    transfer_hist = []
+    for transfer in transfers:
+        bank = transfer['bank']
+        target_host, target_port = get_host(bank)
+        data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
+        try:
+            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data)
+        except requests.exceptions.ConnectionError:
+            pending_undones += transfer_hist
+            return jsonify({'message': 'Failure to communicate with partner bankss'}), 502
+        if response.status_code != 200:
+            pending_undones += transfer_hist
+            return jsonify(response.json()), response.status_code
+        transfer_hist.append(transfer)
+   
+    return jsonify({'message': 'Payment completed successfully'}), 200
+
+#  Padrão: Saga com Coordenação de Bloqueio
+@app.route('/transfer_op', methods=['POST'])
+def transfer_op():
+    if 'user_id' not in session:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    transfers = request.get_json()
+    target_transfer = transfers.pop()
+
+    transfer_hist = []
+    for transfer in transfers:
+        bank = transfer['bank']
+        target_host, target_port = get_host(bank)
+        data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
+        try:
+            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data)
+        except requests.exceptions.ConnectionError:
+            pending_undones += transfer_hist
+            return jsonify({'message': 'Failure to communicate with partner bankss'}), 502
+        if response.status_code != 200:
+            pending_undones += transfer_hist
+            return jsonify(response.json()), response.status_code
+        transfer_hist.append(transfer)
+   
+    target_bank = target_transfer['bank']
+    target_host, target_port = get_host(target_bank)
+    data = {'user_id': target_transfer['user_id'], 'amount': target_transfer['amount']}
+    try:
+        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data)
+    except requests.exceptions.ConnectionError:
+        pending_undones += transfer_hist
+        return jsonify({'message': 'Failure to communicate with partner banks'}), 502
+    if response.status_code != 200:
+        pending_undones += transfer_hist
+        return jsonify(response.json()), response.status_code
+
+    return jsonify({'message': 'Transfer completed successfully'}), 200
+
+def get_host(bank):
+    if bank == 'brasil':
+        target_host = host1
+        target_port = port1
+    elif bank == 'bradesco':
+        target_host = host2
+        target_port = port2
+    elif bank == 'caixa':
+        target_host = host3
+        target_port = port3
+
+    return target_host, target_port
+
+"""
+========================================================================
+                        Requisições Entre Bancos
+========================================================================
+"""
+
+@app.route('/add_balance', methods=['POST'])
+def add_balance():
+    client_ip = request.remote_addr
+    if client_ip not in allowed_ips:
+        return jsonify({'message': 'Forbidden'}), 403
+    
+    data = request.get_json()
+    user_id = data.get('user_id')
+    
+    if user_id not in accounts:
+        return jsonify({'message': 'User account does not exist'}), 404
+    
+    accounts[user_id]['lock'].acquire(blocking=True)
+    accounts[user_id]['balance'] += data['amount']
+    accounts[user_id]['lock'].release()
+
+    return jsonify({'message': 'Amount added to account'}), 200
+
+@app.route('/remove_balance', methods=['POST'])
+def remove_balance():
+    client_ip = request.remote_addr
+    if client_ip not in allowed_ips:
+        return jsonify({'message': 'Forbidden'}), 403
+    
+    data = request.get_json()
+    user_id = data.get('user_id')
+    
+    if user_id not in accounts:
+        return jsonify({'message': 'User account does not exist'}), 404
+    
+    if accounts[user_id]['balance'] < data['amount']:
+        return jsonify({'message': 'Insufficient funds'}), 400
+    
+    accounts[user_id]['lock'].acquire(blocking=True)
+    accounts[user_id]['balance'] -= data['amount']
+    accounts[user_id]['lock'].release()
+    
+    return jsonify({'message': 'Amount removed to account'}), 200
 
 @app.route('/balances/<string:user_id>', methods=['GET'])
 def balances(user_id):
-    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
     client_ip = request.remote_addr
     if client_ip not in allowed_ips:
         return jsonify({'message': 'Forbidden'}), 403
@@ -306,16 +366,14 @@ def balances(user_id):
         if user_id == account_id or user_id in account_id.split("&"):
             accounts_found.append({'account_id': account_id, 'bank': bank_name, 'balance': accounts[account_id]['balance']})
 
-    # Verifica se a conta existe
     if len(accounts_found) == 0:
         return jsonify({'message': 'User account does not exist'}), 404
     
-    # Retorna o saldo da conta se a conta existir
     return jsonify(accounts_found), 200
 
+# Acho que ta sem uso
 @app.route('/balance/<string:user_id>', methods=['GET'])
 def balance(user_id):
-
     client_ip = request.remote_addr
     if client_ip not in allowed_ips:
         return jsonify({'message': 'Forbidden'}), 403
@@ -325,46 +383,35 @@ def balance(user_id):
     else:
         return jsonify({'message': 'User account does not exist'}), 404
 
+"""
+========================================================================
+                            Threds
+========================================================================
+"""
 
-@app.route('/add_balance', methods=['POST'])
-def add_balance():
-    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-    
-    data = request.get_json()
-    user_id = data.get('user_id')
-    amount = data.get('amount')
-    
-    # Verifica se a conta existe
-    if user_id not in accounts:
-        return jsonify({'message': 'User account does not exist'}), 404
-    
-    # Adiciona o valor na conta
-    accounts[user_id]['balance'] += amount
-    return jsonify({'message': 'Amount added to account'}), 200
+def undo_transfers():
+    while True:
+        sleep(0.1)
+        if len(pending_undones) > 0:
+            transfer = pending_undones.pop(0)
+            bank = transfer['bank']
+            target_host, target_port = get_host(bank)
 
-@app.route('/remove_balance', methods=['POST'])
-def remove_balance():
-    # Verifica se o endereço IP da solicitação está na lista de IPs permitidos
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-    
-    data = request.get_json()
-    user_id = data.get('user_id')
-    amount = data.get('amount')
-    
-    # Verifica se a conta existe
-    if user_id not in accounts:
-        return jsonify({'message': 'User account does not exist'}), 404
-    
-    if accounts[user_id]['balance'] < amount:
-        return jsonify({'message': 'Insufficient funds'}), 400
-    
-    accounts[user_id]['balance'] -= amount
-    return jsonify({'message': 'Amount removed to account'}), 200
+            transfer_undone = False
+            while transfer_undone == False:
+                data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
+                try:
+                    response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data)
+                    transfer_undone = True 
+                except requests.exceptions.ConnectionError:
+                    pending_undones.append(transfer)
+
+"""
+========================================================================
+                            Main
+========================================================================
+"""
 
 if __name__ == '__main__':
+    threading.Thread(target=undo_transfers, daemon=True).start()
     app.run(host=host, port=port)

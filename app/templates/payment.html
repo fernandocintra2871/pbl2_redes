@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Payment</h2>
+        <form id="paymentForm">
+            <input type="text" id="paymentTarget" name="target" placeholder="Código do Pagamento" required>
+            <h3>Valores</h3>
+            <div id="transferAmounts"></div>
+            <button type="submit">Pagar</button>
+        </form>
+        <div id="message"></div>
+        <button id="goBack">Voltar</button>
+    </div>
+    <script src="{{ url_for('static', filename='payment.js') }}"></script>

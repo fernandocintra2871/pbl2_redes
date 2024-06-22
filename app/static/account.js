@@ -62,4 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('goToTransfer').addEventListener('click', () => {
         redirectTo('/transfer');
     });
+
+    document.getElementById('goToPayment').addEventListener('click', () => {
+        redirectTo('/payment');
+    });
 });
