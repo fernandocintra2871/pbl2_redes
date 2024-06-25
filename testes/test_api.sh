@@ -1,11 +1,14 @@
 #!/bin/bash
 
 # URLs da API
-URL="http://127.0.0.1:5000"
+URL="http://127.0.0.1:12345"
 REGISTER_URL="$URL/register"
 LOGIN_URL="$URL/login"
-DEPOSIT_URL="$URL/deposit"
-TRANSFER_URL="$URL/transfer"
+DEPOSIT_URL="$URL/deposit_op"
+TRANSFER_URL="$URL/transfer_op"
+WITHDRAW_URL="$URL/withdraw_op"
+PAYMENT_URL="$URL/payment_op"
+AB_BALANCE_URL="$URL/ab_balance"
 LOGOUT_URL="$URL/logout"
 
 # Usuários de teste
@@ -38,17 +41,41 @@ login_user() {
 deposit() {
   local amount=$1
   curl -s -X POST -H "Content-Type: application/json" -b cookies.txt \
-    -d "{\"amount\":$amount}" \
+    -d "{\"bank\":\"brasil\", \"joint_account\":false, \"second_holder\":\"\", \"amount\":$amount}" \
     $DEPOSIT_URL
+}
+
+# Função para fazer saque
+withdraw() {
+  local amount=$1
+  curl -s -X POST -H "Content-Type: application/json" -b cookies.txt \
+    -d "{\"bank\":\"brasil\", \"joint_account\":false, \"second_holder\":\"\", \"amount\":$amount}" \
+    $WITHDRAW_URL
 }
 
 # Função para fazer transferência
 transfer() {
-  local target_username=$1
+  local origin_username=$1
+  local target_username=$2
+  local amount=$3
+  curl -s -X POST -H "Content-Type: application/json" -b cookies.txt \
+    -d "[{\"user_id\":\"$origin_username\", \"bank\":\"brasil\", \"amount\":$amount}, {\"user_id\":\"$target_username\", \"bank\":\"brasil\", \"amount\":$amount}]" \
+    $TRANSFER_URL
+}
+
+# Função para fazer pagamento
+payment() {
+  local user_id=$1
   local amount=$2
   curl -s -X POST -H "Content-Type: application/json" -b cookies.txt \
-    -d "{\"target_username\":\"$target_username\",\"amount\":$amount}" \
-    $TRANSFER_URL
+    -d "[{\"user_id\":\"$user_id\", \"bank\":\"brasil\", \"amount\":$amount}]" \
+    $PAYMENT_URL
+}
+
+# Função para obter saldos
+get_balances() {
+  curl -s -X GET -H "Content-Type: application/json" -b cookies.txt \
+    $AB_BALANCE_URL
 }
 
 # Função para fazer logout
@@ -69,22 +96,46 @@ login_user $USER1 $PASS1
 
 # Depositar dinheiro
 echo "Depositando dinheiro..."
-deposit 300
-# Função para realizar transferência e verificar saldo
-perform_transfer() {
-  transfer $1 $2
-}
+deposit 400
 
-# Transferir dinheiro simultaneamente
-echo "Transferindo dinheiro simultaneamente..."
-perform_transfer $USER2 300 &
-perform_transfer $USER3 300 &
+echo "Sacando dinheiro..."
+# Fazer saques simultâneos
 
-# Aguardar todas as transferências terminarem
+withdraw 100
+
+echo "Transferindo dinheiro..."
+# Transferir dinheiro
+transfer $USER1 $USER2 100 
+
+echo "Realizando pagamento..."
+# Realizar pagamentos simultâneos
+payment $USER1 100
+
+# Realizar operações simultâneas
+echo "Realizando operações simultâneas..."
+
+# Transferir dinheiro
+transfer $USER1 $USER2 100 &
+transfer $USER1 $USER3 100 &
+transfer $USER1 $USER2 100 &
+transfer $USER1 $USER3 100 &
+transfer $USER1 $USER2 100 &
+transfer $USER1 $USER3 100 &
+transfer $USER1 $USER2 100 &
+transfer $USER1 $USER3 100 &
+transfer $USER1 $USER2 100 &
+transfer $USER1 $USER3 100 &
+
 wait
+
+# Obter saldos
+echo "Obtendo saldos..."
+get_balances
 
 # Logout
 echo "Deslogando..."
 logout
 
 echo "Testes de concorrência concluídos."
+
+read -p "Pressione Enter para sair..."

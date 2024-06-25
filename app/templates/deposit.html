@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Depósito</h2>
+        <h1>Depósito</h1>
         <form id="depositForm">
             <select id="depositBankSelection" name="bank" required>
                 <option value="">Selecione um banco</option>
@@ -15,13 +15,13 @@
                 <option value="bradesco">Bradesco</option>
                 <option value="caixa">Caixa Econômica Federal</option>
             </select>
-            <div>
+            <div class="check-box">
                 <label for="depositJointAccount">Conta Conjunta</label>
                 <input type="checkbox" id="depositJointAccount" name="joint_account">
             </div>
            
             <input type="text" id="depositSecondHolder" style="display: none;"  name="second_holder" placeholder="CPF do Segundo Titular">
-            <input type="number" id="depositAmount" name="amount" placeholder="Valor do Deposito" required>
+            <input type="number" step="0.01" id="depositAmount" name="amount" placeholder="Valor do Deposito" required>
             <button type="submit">Depositar</button>
         </form>
         <div id="message"></div>

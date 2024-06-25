@@ -7,13 +7,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sistema</h1>
-        <h2>Saldo das Contas</h2>
-        <div id="accountsBalances" class="balance-container"></div> 
+        <h1>{{bank_name}}</h1>
+        <h2>Operações</h2>
         <button id="goToWithdraw">Saque</button>
         <button id="goToDeposit">Depósito</button>
         <button id="goToTransfer">Transferência</button>
         <button id="goToPayment">Pagamento</button>
+        <h2>Saldo das Contas</h2>
+        <div id="accountsBalances" class="balance-container"></div> 
         <button id="logoutButton">Logout</button>
     </div>
     <script src="{{ url_for('static', filename='account.js') }}"></script>

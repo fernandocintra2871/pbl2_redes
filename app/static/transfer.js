@@ -70,12 +70,34 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 transferAmounts.innerHTML = '';
                 data.forEach((bankInfo, index) => {
+                    // Ajusta o nome do banco
+                    let bankName = bankInfo.bank;
+                    if (bankName === "brasil") {
+                        bankName = "Banco do Brasil";
+                    } else if (bankName === "bradesco") {
+                        bankName = "Bradesco";
+                    } else if (bankName === "caixa") {
+                        bankName = "Caixa Econômica Federal";
+                    }
+    
+                    // Ajusta o tipo de conta
+                    let accountType = "";
+                    if (bankInfo.account_id.includes('&')) {
+                        const cpf_str = bankInfo.account_id.split('&')[1].trim();
+                        accountType = ` (2º titular ${cpf_str})`;
+                    } else {
+                        accountType = " (Individual)";
+                    }
+    
+                    // Cria o input
                     const newInput = document.createElement('input');
                     newInput.type = 'number';
                     newInput.id = `transferAmount${index + 1}`;
                     newInput.name = `${bankInfo.bank}|${bankInfo.account_id}`;
-                    let cpf_str = bankInfo.account_id.replace(/&/g, ' | ');
-                    newInput.placeholder = `${bankInfo.bank}: ${cpf_str}`;
+                    newInput.step = "0.01";
+                    newInput.placeholder = `${bankName}${accountType}`;
+                    
+                    // Adiciona o input ao elemento transferAmounts
                     transferAmounts.appendChild(newInput);
                 });
             })
@@ -83,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Erro na atualização dos saldos dos bancos afiliados:', error);
             });
     }
+    
 
     if (transferJointAccountCheckbox) {
         transferJointAccountCheckbox.addEventListener('change', () => {

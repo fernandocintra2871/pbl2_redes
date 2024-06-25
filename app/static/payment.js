@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            if (transfers.length > 1){
+            if (transfers.length >= 1){
                 fetch('/payment_op', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -62,12 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 transferAmounts.innerHTML = '';
                 data.forEach((bankInfo, index) => {
+                    // Ajusta o nome do banco de acordo com a lógica fornecida
+                    let bankName = bankInfo.bank;
+                    if (bankName === "brasil") {
+                        bankName = "Banco do Brasil";
+                    } else if (bankName === "bradesco") {
+                        bankName = "Bradesco";
+                    } else if (bankName === "caixa") {
+                        bankName = "Caixa Econômica Federal";
+                    }
+    
+                    // Determina o tipo de conta
+                    let accountType = "";
+                    if (bankInfo.account_id.includes('&')) {
+                        const cpf_str = bankInfo.account_id.split('&')[1].trim();
+                        accountType = ` (2º titular ${cpf_str})`;
+                    } else {
+                        accountType = " (Conta Individual)";
+                    }
+    
+                    // Cria o novo input
                     const newInput = document.createElement('input');
                     newInput.type = 'number';
                     newInput.id = `transferAmount${index + 1}`;
                     newInput.name = `${bankInfo.bank}|${bankInfo.account_id}`;
-                    let cpf_str = bankInfo.account_id.replace(/&/g, ' | ');
-                    newInput.placeholder = `${bankInfo.bank}: ${cpf_str}`;
+                    newInput.step = "0.01";
+                    newInput.placeholder = `${bankName}${accountType}`;
+                    
+                    // Adiciona o novo input ao elemento transferAmounts
                     transferAmounts.appendChild(newInput);
                 });
             })
@@ -75,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Erro na atualização dos saldos dos bancos afiliados:', error);
             });
     }
+    
 
     document.getElementById('goBack').addEventListener('click', () => {
         redirectTo('/');

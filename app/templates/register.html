@@ -9,7 +9,12 @@
     <div class="container">
         <h2>Register</h2>
         <form id="registerForm">
-            <input type="text" id="registerUsername" name="username" placeholder="Username" required>
+            <div class="check-box">
+                <label for="registerJointAccount">Conta Conjunta</label>
+                <input type="checkbox" id="registerJointAccount" name="joint_account">
+            </div>
+            <input type="text" id="registerUsername" name="username" placeholder="CPF" required>
+            <input type="text" id="registerUsername2" style="display: none;" name="username2" placeholder="CPF do 2º Titular">
             <input type="password" id="registerPassword" name="password" placeholder="Password" required>
             <button type="submit">Register</button>
         </form>

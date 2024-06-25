@@ -14,19 +14,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 accountsBalances.innerHTML = '';
                 data.forEach(bankInfo => {
                     const bankElement = document.createElement('div');
-                    bankElement.classList.add('balance-item');
-
+                    bankElement.classList.add('balance-item'); // Adiciona a classe "balance"
+    
+                    // Ajusta o nome do banco
+                    let bankName = bankInfo.bank;
+                    if (bankName === "brasil") {
+                        bankName = "Banco do Brasil";
+                    } else if (bankName === "bradesco") {
+                        bankName = "Bradesco";
+                    } else if (bankName === "caixa") {
+                        bankName = "Caixa Econômica Federal";
+                    }
+    
                     const bank = document.createElement('h3');
-                    bank.textContent = `${bankInfo.bank}`;
+                    bank.textContent = bankName;
                     bankElement.appendChild(bank);
-
-                    let cpf_str = bankInfo.account_id.replace(/&/g, ' | ');
+    
+                    // Lógica do CPF / conta individual
                     const cpfs = document.createElement('p');
-                    cpfs.textContent = `${cpf_str}`;
+                    if (bankInfo.account_id.includes('&')) {
+                        const cpf_str = bankInfo.account_id.split('&')[1].trim();
+                        cpfs.textContent = `2º Titular ${cpf_str}`;
+                    } else {
+                        cpfs.textContent = "Conta Individual";
+                    }
                     bankElement.appendChild(cpfs);
-
+    
                     const bankBalance = document.createElement('p');
-                    bankBalance.textContent = `R$${bankInfo.balance}`;
+                    bankBalance.textContent = `R$ ${bankInfo.balance}`;
                     bankElement.appendChild(bankBalance);
     
                     accountsBalances.appendChild(bankElement);

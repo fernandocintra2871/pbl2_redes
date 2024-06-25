@@ -11,22 +11,9 @@ accounts = {}
 
 pending_undones = []
 
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
-pending_undones.append({ 'user_id': '1', 'bank': 'brasil', 'operation':'subtraction',  'amount':  100 })
+bank_name = "brasil"#
 
-host = "127.0.0.1"
-port = "12345"
-bank_name = "brasil"
-
-
+# Host do Banco do Brasil
 host1 = "127.0.0.1"
 port1 = "12345"
 
@@ -38,17 +25,30 @@ port2 = "12346"
 host3 = "127.0.0.1"
 port3 = "12347"
 
-allowed_ips = ['127.0.0.1']
+if bank_name == "brasil":
+    host = "127.0.0.1"
+    port = "12345"
+elif bank_name == "bradesco":
+    host = "127.0.0.1"
+    port = "12346"
+elif bank_name == "caixa":
+    host = "127.0.0.1" 
+    port = "12347"
+
+allowed_ips = [host1, host2, host3]
 
 # Conta de teste
-users["1"] = { 'id': "1",'password': "123" }
-accounts["1"] = { 'balance': 1000, 'lock': threading.Lock() }
+users["06440742051"] = { 'id': "06440742051",'password': "123" }
+accounts["06440742051"] = { 'balance': 1000, 'lock': threading.Lock() }
 
-users["1&2"] = { 'id': "1&2",'password': "123" }
-accounts["1&2"] = { 'balance': 500, 'lock': threading.Lock() }
+users["06440742051&27574742006"] = { 'id': "06440742051&27574742006",'password': "123" }
+accounts["06440742051&27574742006"] = { 'balance': 500, 'lock': threading.Lock() }
 
-users["2"] = { 'id': "2",'password': "123" }
-accounts["2"] = { 'balance': 0, 'lock': threading.Lock()}
+users["06440742051&30739886029"] = { 'id': "06440742051&30739886029",'password': "123" }
+accounts["06440742051&30739886029"] = { 'balance': 200, 'lock': threading.Lock() }
+
+users["27574742006"] = { 'id': "27574742006",'password': "123" }
+accounts["27574742006"] = { 'balance': 0, 'lock': threading.Lock()}
 
 
 """
@@ -75,7 +75,13 @@ def register():
 def account():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('account.html', bank_name=bank_name)
+    if bank_name == "brasil":
+        bank = "Banco do Brasil"
+    elif bank_name == "bradesco":
+        bank = "Bradesco"
+    elif bank_name == "caixa":
+        bank = "Caixa Econômica Federal"
+    return render_template('account.html', bank_name=bank)
 
 @app.route('/withdraw')
 def withdraw():
@@ -118,7 +124,6 @@ def register_user():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
     if username in users:
         return jsonify({'message': 'User already exists'}), 400
     
@@ -140,7 +145,12 @@ def login_user():
     username = data.get('username')
     password = data.get('password')
     
-    user = users.get(username)
+    user = None
+    for user_id in users.keys():
+        if username == user_id or username in user_id.split("&"):
+            user = users[user_id]
+            break
+
     if not user or not user['password'] == password:
         return jsonify({'message': 'Invalid username or password'}), 401
     
@@ -223,15 +233,26 @@ def ab_balances():
     user_id = session['user_id']
 
     balances = []
-    response = requests.get(f'http://{host}:{port}/balances/{user_id}')
-    data = response.json()
-    balances += data
-    response = requests.get(f'http://{host}:{port}/balances/{user_id}')
-    data = response.json()
-    balances += data
-    response = requests.get(f'http://{host}:{port}/balances/{user_id}')
-    data = response.json()
-    balances += data
+    try:
+        response = requests.get(f'http://{host1}:{port1}/balances/{user_id}')
+        data = response.json()
+        balances += data
+    except:
+        pass
+
+    try:
+        response = requests.get(f'http://{host2}:{port2}/balances/{user_id}')
+        data = response.json()
+        balances += data
+    except:
+        pass
+
+    try:
+        response = requests.get(f'http://{host3}:{port3}/balances/{user_id}')
+        data = response.json()
+        balances += data
+    except:
+        pass
 
     return  jsonify(balances), 200
 
@@ -241,6 +262,8 @@ def payment_op():
         return jsonify({'message': 'Unauthorized'}), 401
 
     transfers = request.get_json()
+
+    global pending_undones
 
     transfer_hist = []
     for transfer in transfers:
@@ -267,6 +290,8 @@ def transfer_op():
 
     transfers = request.get_json()
     target_transfer = transfers.pop()
+
+    global pending_undones
 
     transfer_hist = []
     for transfer in transfers:
@@ -346,10 +371,10 @@ def remove_balance():
     if user_id not in accounts:
         return jsonify({'message': 'User account does not exist'}), 404
     
-    if accounts[user_id]['balance'] < data['amount']:
-        return jsonify({'message': 'Insufficient funds'}), 400
-    
     accounts[user_id]['lock'].acquire(blocking=True)
+    if accounts[user_id]['balance'] < data['amount']:
+        accounts[user_id]['lock'].release()
+        return jsonify({'message': 'Insufficient funds'}), 400
     accounts[user_id]['balance'] -= data['amount']
     accounts[user_id]['lock'].release()
     

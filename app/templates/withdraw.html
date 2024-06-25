@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Saque</h2>
+        <h1>Saque</h1>
         <form id="withdrawForm">
             <select id="withdrawBankSelection" name="bank" required>
                 <option value="">Selecione um banco</option>
@@ -15,13 +15,13 @@
                 <option value="bradesco">Bradesco</option>
                 <option value="caixa">Caixa Econômica Federal</option>
             </select>
-            <div>
+            <div class="check-box">
                 <label for="withdrawJointAccount">Conta Conjunta</label>
                 <input type="checkbox" id="withdrawJointAccount" name="joint_account">
             </div>
             
             <input type="text" id="withdrawSecondHolder" style="display: none;"  name="second_holder" placeholder="CPF do Segundo Titular">
-            <input type="number" id="withdrawAmount" name="amount" placeholder="Withdraw Amount" required>
+            <input type="number" step="0.01" id="withdrawAmount" name="amount" placeholder="Withdraw Amount" required>
             <button type="submit">Sacar</button>
         </form>
         <div id="message"></div>

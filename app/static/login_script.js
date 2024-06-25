@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage(data.message);
                 if (data.message === 'Login successful') {
                     redirectTo('/account');
+                } else {
+                    setTimeout(() => {redirectTo('/');}, 2000);
                 }
             });
         });
