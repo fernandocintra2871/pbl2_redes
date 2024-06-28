@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 from time import sleep
+import os
 import requests
 import threading
 
@@ -11,31 +12,30 @@ accounts = {}
 
 pending_undones = []
 
-bank_name = "brasil"#
+bank_name = os.environ.get("bank_name")
 
 # Host do Banco do Brasil
-host1 = "127.0.0.1"
+host1 = os.environ.get("brasil_host")
 port1 = "12345"
 
 # Host do Bradesco
-host2 = "127.0.0.1"
+host2 = os.environ.get("bradesco_host")
 port2 = "12346"
 
 # Host da Caixa Econômica Federal
-host3 = "127.0.0.1"
+host3 = os.environ.get("caixa_host")
 port3 = "12347"
 
+host = "0.0.0.0"
 if bank_name == "brasil":
-    host = "127.0.0.1"
-    port = "12345"
+    #host = host1
+    port = port1
 elif bank_name == "bradesco":
-    host = "127.0.0.1"
-    port = "12346"
+    #host = host2
+    port = port2
 elif bank_name == "caixa":
-    host = "127.0.0.1" 
-    port = "12347"
-
-allowed_ips = [host1, host2, host3]
+    #host = host3
+    port = port3
 
 # Conta de teste
 users["06440742051"] = { 'id': "06440742051",'password': "123" }
@@ -154,7 +154,7 @@ def login_user():
     if not user or not user['password'] == password:
         return jsonify({'message': 'Invalid username or password'}), 401
     
-    session['user_id'] = user['id']
+    session['user_id'] = username
     return jsonify({'message': 'Login successful'}), 200
 
 """
@@ -185,8 +185,8 @@ def deposit_op():
     target_host, target_port = get_host(bank)
 
     try:
-        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json={'user_id': user_id, 'amount': amount})
-    except requests.exceptions.ConnectionError:
+        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json={'user_id': user_id, 'amount': amount}, timeout=3)
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         return jsonify({'message': 'Falha ao se comunicar com o banco destino'}), 502
 
     data = response.json()
@@ -216,8 +216,8 @@ def withdraw_op():
     target_host, target_port = get_host(bank)
     
     try:
-        response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json={'user_id': user_id, 'amount': amount})
-    except requests.exceptions.ConnectionError:
+        response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json={'user_id': user_id, 'amount': amount}, timeout=3)
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         return jsonify({'message': 'Falha ao se comunicar com o banco destino'}), 502
 
     data = response.json()
@@ -234,24 +234,27 @@ def ab_balances():
 
     balances = []
     try:
-        response = requests.get(f'http://{host1}:{port1}/balances/{user_id}')
-        data = response.json()
-        balances += data
-    except:
+        response = requests.get(f'http://{host1}:{port1}/balances/{user_id}', timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            balances += data
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         pass
 
     try:
-        response = requests.get(f'http://{host2}:{port2}/balances/{user_id}')
-        data = response.json()
-        balances += data
-    except:
+        response = requests.get(f'http://{host2}:{port2}/balances/{user_id}', timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            balances += data
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         pass
 
     try:
-        response = requests.get(f'http://{host3}:{port3}/balances/{user_id}')
-        data = response.json()
-        balances += data
-    except:
+        response = requests.get(f'http://{host3}:{port3}/balances/{user_id}', timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            balances += data
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         pass
 
     return  jsonify(balances), 200
@@ -271,8 +274,8 @@ def payment_op():
         target_host, target_port = get_host(bank)
         data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
         try:
-            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data)
-        except requests.exceptions.ConnectionError:
+            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data, timeout=3)
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             pending_undones += transfer_hist
             return jsonify({'message': 'Failure to communicate with partner bankss'}), 502
         if response.status_code != 200:
@@ -299,8 +302,8 @@ def transfer_op():
         target_host, target_port = get_host(bank)
         data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
         try:
-            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data)
-        except requests.exceptions.ConnectionError:
+            response = requests.post(f'http://{target_host}:{target_port}/remove_balance', json=data, timeout=3)
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             pending_undones += transfer_hist
             return jsonify({'message': 'Failure to communicate with partner bankss'}), 502
         if response.status_code != 200:
@@ -312,8 +315,8 @@ def transfer_op():
     target_host, target_port = get_host(target_bank)
     data = {'user_id': target_transfer['user_id'], 'amount': target_transfer['amount']}
     try:
-        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data)
-    except requests.exceptions.ConnectionError:
+        response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data, timeout=3)
+    except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         pending_undones += transfer_hist
         return jsonify({'message': 'Failure to communicate with partner banks'}), 502
     if response.status_code != 200:
@@ -343,10 +346,6 @@ def get_host(bank):
 
 @app.route('/add_balance', methods=['POST'])
 def add_balance():
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-    
     data = request.get_json()
     user_id = data.get('user_id')
     
@@ -361,10 +360,6 @@ def add_balance():
 
 @app.route('/remove_balance', methods=['POST'])
 def remove_balance():
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-    
     data = request.get_json()
     user_id = data.get('user_id')
     
@@ -382,10 +377,6 @@ def remove_balance():
 
 @app.route('/balances/<string:user_id>', methods=['GET'])
 def balances(user_id):
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-    
     accounts_found = []
     for account_id in accounts.keys():
         if user_id == account_id or user_id in account_id.split("&"):
@@ -395,18 +386,6 @@ def balances(user_id):
         return jsonify({'message': 'User account does not exist'}), 404
     
     return jsonify(accounts_found), 200
-
-# Acho que ta sem uso
-@app.route('/balance/<string:user_id>', methods=['GET'])
-def balance(user_id):
-    client_ip = request.remote_addr
-    if client_ip not in allowed_ips:
-        return jsonify({'message': 'Forbidden'}), 403
-
-    if user_id in accounts.keys():
-        return jsonify({'balance': accounts[user_id]['balance']}), 200
-    else:
-        return jsonify({'message': 'User account does not exist'}), 404
 
 """
 ========================================================================
@@ -421,15 +400,11 @@ def undo_transfers():
             transfer = pending_undones.pop(0)
             bank = transfer['bank']
             target_host, target_port = get_host(bank)
-
-            transfer_undone = False
-            while transfer_undone == False:
-                data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
-                try:
-                    response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data)
-                    transfer_undone = True 
-                except requests.exceptions.ConnectionError:
-                    pending_undones.append(transfer)
+            data = {'user_id': transfer['user_id'], 'amount': transfer['amount']}
+            try:
+                response = requests.post(f'http://{target_host}:{target_port}/add_balance', json=data, timeout=3)
+            except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
+                pending_undones.append(transfer)
 
 """
 ========================================================================
