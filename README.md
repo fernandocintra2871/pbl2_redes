@@ -1,5 +1,26 @@
 # Problema 2 - Transações Bancárias Distribuídas (MI de Concorrência e Conectividade)
 
+## Sumário
+* [Introdução](#introdução)
+* [Como utilizar a solução desenvolvida?](#como-utilizar-a-solução-desenvolvida)
+  * [1º etapa - Baixando a imagem Docker](#1º-etapa---baixando-a-imagem-docker)
+  * [2º etapa - Executando a imagem baixada](#2º-etapa---executando-a-imagem-baixada)
+* [Solução Desenvolvida](#solução-desenvolvida)
+  * [Telas](#telas)
+* [Aspecto do Projeto](#aspecto-do-projeto)
+  * [Permite gerenciar contas?](#permite-gerenciar-contas)
+  * [Permite selecionar e realizar transferência entre diferentes contas?](#permite-selecionar-e-realizar-transferência-entre-diferentes-contas)
+  * [Comunicação entre servidores](#comunicação-entre-servidores)
+    * [Registro e Login](#registro-e-login)
+    * [Operações Realizadas Pelo Banco](#operações-realizadas-pelo-banco)
+    * [Requisições Entre Bancos](#requisições-entre-bancos)
+    * [Rotas das Páginas do Sistema](#rotas-das-páginas-do-sistema)
+  * [Sincronização em um único servidor](#sincronização-em-um-único-servidor)
+  * [Algoritmo da concorrência distribuída está teoricamente bem empregado?](#algoritmo-da-concorrência-distribuída-está-teoricamente-bem-empregado)
+  * [Algoritmo está tratando o problema na prática?](#algoritmo-está-tratando-o-problema-na-prática)
+  * [Tratamento da confiabilidade](#tratamento-da-confiabilidade)
+  * [Pelo menos uma transação concorrente é realizada?](#pelo-menos-uma-transação-concorrente-é-realizada)
+
 ## Introdução
 
 O presente projeto foi solicitado como trabalho avaliativo para a disciplina MI - Concorrência e Conectividade (TEC502)  do curso de Engenharia de Computação da Universidade Estadual de Feira de Santana (UEFS). O trabalho em questão exige o desenvolvimento de um sistema distribuído que possibilite a criação e a movimentação de contas bancárias de maneira descentralizada, inspirado no sistema Pix utilizado no Brasil. 
